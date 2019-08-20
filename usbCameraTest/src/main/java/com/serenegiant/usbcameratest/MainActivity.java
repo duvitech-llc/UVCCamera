@@ -23,9 +23,14 @@
 
 package com.serenegiant.usbcameratest;
 
+import android.app.Activity;
+import android.graphics.Bitmap;
+import android.graphics.PixelFormat;
 import android.graphics.SurfaceTexture;
 import android.hardware.usb.UsbDevice;
 import android.os.Bundle;
+import android.os.SystemClock;
+import android.util.Log;
 import android.view.Surface;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -35,6 +40,7 @@ import android.widget.Toast;
 import com.serenegiant.common.BaseActivity;
 import com.serenegiant.usb.CameraDialog;
 import com.serenegiant.usb.IButtonCallback;
+import com.serenegiant.usb.IFrameCallback;
 import com.serenegiant.usb.IStatusCallback;
 import com.serenegiant.usb.USBMonitor;
 import com.serenegiant.usb.USBMonitor.OnDeviceConnectListener;
@@ -43,8 +49,9 @@ import com.serenegiant.usb.UVCCamera;
 import com.serenegiant.widget.SimpleUVCCameraTextureView;
 
 import java.nio.ByteBuffer;
+import java.util.Date;
 
-public final class MainActivity extends BaseActivity implements CameraDialog.CameraDialogParent {
+public final class MainActivity extends BaseActivity implements CameraDialog.CameraDialogParent, IFrameCallback {
 
 	private final Object mSync = new Object();
     // for accessing USB and USB camera
@@ -54,11 +61,15 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 	// for open&start / stop&close camera preview
 	private ImageButton mCameraButton;
 	private Surface mPreviewSurface;
+	private static  Activity myActivity;
 
 	@Override
 	protected void onCreate(final Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+
+		myActivity = this;
+
 		mCameraButton = (ImageButton)findViewById(R.id.camera_button);
 		mCameraButton.setOnClickListener(mOnClickListener);
 
@@ -208,6 +219,7 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 					}
 					synchronized (mSync) {
 						mUVCCamera = camera;
+						mUVCCamera.setFrameCallback((IFrameCallback) myActivity, PixelFormat.RGB_565);
 					}
 				}
 			}, 0);
@@ -270,26 +282,26 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 		}
 	}
 
-	// if you need frame data as byte array on Java side, you can use this callback method with UVCCamera#setFrameCallback
-	// if you need to create Bitmap in IFrameCallback, please refer following snippet.
-/*	final Bitmap bitmap = Bitmap.createBitmap(UVCCamera.DEFAULT_PREVIEW_WIDTH, UVCCamera.DEFAULT_PREVIEW_HEIGHT, Bitmap.Config.RGB_565);
-	private final IFrameCallback mIFrameCallback = new IFrameCallback() {
-		@Override
-		public void onFrame(final ByteBuffer frame) {
-			frame.clear();
-			synchronized (bitmap) {
-				bitmap.copyPixelsFromBuffer(frame);
-			}
-			mImageView.post(mUpdateImageTask);
+	private static long prevFrame = 0;
+	private static long currFrame = 0;
+	private static long frameTime = 0;
+	private static long countFrames = 0;
+
+	@Override
+	public void onFrame(ByteBuffer frame) {
+		countFrames++;
+		currFrame = SystemClock.elapsedRealtime();
+		if(prevFrame == 0)
+			prevFrame = currFrame;
+		else {
+			frameTime = frameTime + (currFrame - prevFrame);
+            prevFrame = currFrame;
 		}
-	};
-	
-	private final Runnable mUpdateImageTask = new Runnable() {
-		@Override
-		public void run() {
-			synchronized (bitmap) {
-				mImageView.setImageBitmap(bitmap);
-			}
+		if(countFrames>120) {
+		    double fps = 1000.0/(frameTime/countFrames);
+            frameTime = 0;
+			countFrames = 0;
+			Log.d("FPS", "" + fps);
 		}
-	}; */
+	}
 }

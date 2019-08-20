@@ -25,15 +25,14 @@ apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion versionCompiler
-   	buildToolsVersion versionBuildTool
 
-   	compileOptions {
+    compileOptions {
    		sourceCompatibility javaSourceCompatibility
    		targetCompatibility javaTargetCompatibility
    	}
 
     defaultConfig {
-        minSdkVersion 18
+        minSdkVersion 21
         targetSdkVersion versionTarget
 
     }
