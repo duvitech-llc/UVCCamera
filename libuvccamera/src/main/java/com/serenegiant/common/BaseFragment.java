@@ -47,13 +47,11 @@ import com.serenegiant.utils.PermissionCheck;
 public class BaseFragment extends Fragment
 	implements MessageDialogFragment.MessageDialogListener {
 
-	private static boolean DEBUG = false;	// FIXME 実働時はfalseにセットすること
+	private static boolean DEBUG = false;	// FIXME
 	private static final String TAG = BaseFragment.class.getSimpleName();
 
-	/** UI操作のためのHandler */
 	private final Handler mUIHandler = new Handler(Looper.getMainLooper());
 	private final Thread mUiThread = mUIHandler.getLooper().getThread();
-	/** ワーカースレッド上で処理するためのHandler */
 	private Handler mWorkerHandler;
 	private long mWorkerThreadID = -1;
 
@@ -64,7 +62,7 @@ public class BaseFragment extends Fragment
 	@Override
 	public void onCreate(final Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		// ワーカースレッドを生成
+		// Create Worker Thread
 		if (mWorkerHandler == null) {
 			mWorkerHandler = HandlerThreadHandler.createHandler(TAG);
 			mWorkerThreadID = mWorkerHandler.getLooper().getThread().getId();
@@ -79,7 +77,7 @@ public class BaseFragment extends Fragment
 
 	@Override
 	public synchronized void onDestroy() {
-		// ワーカースレッドを破棄
+		// Destroy Worker Thread
 		if (mWorkerHandler != null) {
 			try {
 				mWorkerHandler.getLooper().quit();
@@ -93,7 +91,7 @@ public class BaseFragment extends Fragment
 
 //================================================================================
 	/**
-	 * UIスレッドでRunnableを実行するためのヘルパーメソッド
+	 * UI Runnable
 	 * @param task
 	 * @param duration
 	 */
@@ -112,7 +110,7 @@ public class BaseFragment extends Fragment
 	}
 
 	/**
-	 * UIスレッド上で指定したRunnableが実行待ちしていれば実行待ちを解除する
+	 * Remove UI Task
 	 * @param task
 	 */
 	public final void removeFromUiThread(final Runnable task) {
@@ -121,8 +119,7 @@ public class BaseFragment extends Fragment
 	}
 
 	/**
-	 * ワーカースレッド上で指定したRunnableを実行する
-	 * 未実行の同じRunnableがあればキャンセルされる(後から指定した方のみ実行される)
+	 * Queue Task
 	 * @param task
 	 * @param delayMillis
 	 */
@@ -143,7 +140,7 @@ public class BaseFragment extends Fragment
 	}
 
 	/**
-	 * 指定したRunnableをワーカースレッド上で実行予定であればキャンセルする
+	 * Remove Task
 	 * @param task
 	 */
 	protected final synchronized void removeEvent(final Runnable task) {
@@ -158,7 +155,7 @@ public class BaseFragment extends Fragment
 //================================================================================
 	private Toast mToast;
 	/**
-	 * Toastでメッセージを表示
+	 * Toast
 	 * @param msg
 	 */
 	protected void showToast(@StringRes final int msg, final Object... args) {
@@ -168,7 +165,7 @@ public class BaseFragment extends Fragment
 	}
 
 	/**
-	 * Toastが表示されていればキャンセルする
+	 * Clear Toast
 	 */
 	protected void clearToast() {
 		removeFromUiThread(mShowToastTask);
@@ -214,7 +211,7 @@ public class BaseFragment extends Fragment
 
 //================================================================================
 	/**
-	 * MessageDialogFragmentメッセージダイアログからのコールバックリスナー
+	 * MessageDialogFragment
 	 * @param dialog
 	 * @param requestCode
 	 * @param permissions
@@ -224,20 +221,19 @@ public class BaseFragment extends Fragment
 	@Override
 	public void onMessageDialogResult(final MessageDialogFragment dialog, final int requestCode, final String[] permissions, final boolean result) {
 		if (result) {
-			// メッセージダイアログでOKを押された時はパーミッション要求する
 			if (BuildCheck.isMarshmallow()) {
 				requestPermissions(permissions, requestCode);
 				return;
 			}
 		}
-		// メッセージダイアログでキャンセルされた時とAndroid6でない時は自前でチェックして#checkPermissionResultを呼び出す
+
 		for (final String permission: permissions) {
 			checkPermissionResult(requestCode, permission, PermissionCheck.hasPermission(getActivity(), permission));
 		}
 	}
 
 	/**
-	 * パーミッション要求結果を受け取るためのメソッド
+	 * onRequestPermissionsResult
 	 * @param requestCode
 	 * @param permissions
 	 * @param grantResults
@@ -252,14 +248,13 @@ public class BaseFragment extends Fragment
 	}
 
 	/**
-	 * パーミッション要求の結果をチェック
-	 * ここではパーミッションを取得できなかった時にToastでメッセージ表示するだけ
+	 * checkPermissionResult
 	 * @param requestCode
 	 * @param permission
 	 * @param result
 	 */
 	protected void checkPermissionResult(final int requestCode, final String permission, final boolean result) {
-		// パーミッションがないときにはメッセージを表示する
+
 		if (!result && (permission != null)) {
 			if (Manifest.permission.RECORD_AUDIO.equals(permission)) {
 				showToast(com.serenegiant.common.R.string.permission_audio);
@@ -273,16 +268,14 @@ public class BaseFragment extends Fragment
 		}
 	}
 
-	// 動的パーミッション要求時の要求コード
 	protected static final int REQUEST_PERMISSION_WRITE_EXTERNAL_STORAGE = 0x12345;
 	protected static final int REQUEST_PERMISSION_AUDIO_RECORDING = 0x234567;
 	protected static final int REQUEST_PERMISSION_NETWORK = 0x345678;
 	protected static final int REQUEST_PERMISSION_CAMERA = 0x537642;
 
 	/**
-	 * 外部ストレージへの書き込みパーミッションが有るかどうかをチェック
-	 * なければ説明ダイアログを表示する
-	 * @return true 外部ストレージへの書き込みパーミッションが有る
+	 * checkPermissionWriteExternalStorage
+	 * @return true
 	 */
 	protected boolean checkPermissionWriteExternalStorage() {
 		if (!PermissionCheck.hasWriteExternalStorage(getActivity())) {
@@ -295,9 +288,8 @@ public class BaseFragment extends Fragment
 	}
 
 	/**
-	 * 録音のパーミッションが有るかどうかをチェック
-	 * なければ説明ダイアログを表示する
-	 * @return true 録音のパーミッションが有る
+	 * checkPermissionAudio
+	 * @return true
 	 */
 	protected boolean checkPermissionAudio() {
 		if (!PermissionCheck.hasAudio(getActivity())) {
@@ -310,9 +302,8 @@ public class BaseFragment extends Fragment
 	}
 
 	/**
-	 * ネットワークアクセスのパーミッションが有るかどうかをチェック
-	 * なければ説明ダイアログを表示する
-	 * @return true ネットワークアクセスのパーミッションが有る
+	 * checkPermissionNetwork
+	 * @return true
 	 */
 	protected boolean checkPermissionNetwork() {
 		if (!PermissionCheck.hasNetwork(getActivity())) {
@@ -325,9 +316,8 @@ public class BaseFragment extends Fragment
 	}
 
 	/**
-	 * カメラアクセスのパーミッションがあるかどうかをチェック
-	 * なければ説明ダイアログを表示する
-	 * @return true カメラアクセスのパーミッションが有る
+	 * checkPermissionCamera
+	 * @return true
 	 */
 	protected boolean checkPermissionCamera() {
 		if (!PermissionCheck.hasCamera(getActivity())) {

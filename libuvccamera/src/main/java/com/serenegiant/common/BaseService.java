@@ -31,20 +31,18 @@ import android.util.Log;
 import com.serenegiant.utils.HandlerThreadHandler;
 
 public abstract class BaseService extends Service {
-	private static boolean DEBUG = false;	// FIXME 実働時はfalseにセットすること
+	private static boolean DEBUG = false;	// FIXME
 	private static final String TAG = BaseService.class.getSimpleName();
 
-	/** UI操作のためのHandler */
 	private final Handler mUIHandler = new Handler(Looper.getMainLooper());
 	private final Thread mUiThread = mUIHandler.getLooper().getThread();
-	/** ワーカースレッド上で処理するためのHandler */
 	private Handler mWorkerHandler;
 	private long mWorkerThreadID = -1;
 
 	@Override
 	public void onCreate() {
 		super.onCreate();
-		// ワーカースレッドを生成
+		// Create Worker Thread
 		if (mWorkerHandler == null) {
 			mWorkerHandler = HandlerThreadHandler.createHandler(TAG);
 			mWorkerThreadID = mWorkerHandler.getLooper().getThread().getId();
@@ -53,7 +51,7 @@ public abstract class BaseService extends Service {
 
 	@Override
 	public synchronized void onDestroy() {
-		// ワーカースレッドを破棄
+		// Destroy Worker Thread
 		if (mWorkerHandler != null) {
 			try {
 				mWorkerHandler.getLooper().quit();
@@ -67,7 +65,7 @@ public abstract class BaseService extends Service {
 
 //================================================================================
 	/**
-	 * UIスレッドでRunnableを実行するためのヘルパーメソッド
+	 * Run ON ui
 	 * @param task
 	 * @param duration
 	 */
@@ -86,7 +84,7 @@ public abstract class BaseService extends Service {
 	}
 
 	/**
-	 * UIスレッド上で指定したRunnableが実行待ちしていれば実行待ちを解除する
+	 * Remove UI Task
 	 * @param task
 	 */
 	public final void removeFromUiThread(final Runnable task) {
@@ -95,8 +93,7 @@ public abstract class BaseService extends Service {
 	}
 
 	/**
-	 * ワーカースレッド上で指定したRunnableを実行する
-	 * 未実行の同じRunnableがあればキャンセルされる(後から指定した方のみ実行される)
+	 * Queue Runnable
 	 * @param task
 	 * @param delayMillis
 	 */
@@ -117,7 +114,7 @@ public abstract class BaseService extends Service {
 	}
 
 	/**
-	 * 指定したRunnableをワーカースレッド上で実行予定であればキャンセルする
+	 * Cancel Runnable
 	 * @param task
 	 */
 	protected final synchronized void removeEvent(final Runnable task) {
