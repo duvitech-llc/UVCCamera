@@ -70,6 +70,19 @@
         android:scaleType="centerCrop"
         android:src="@drawable/transparent_rect" />
 
+    <ImageButton
+        android:id="@+id/camera_menu"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/ic_menu"
+        android:contentDescription="@string/camera"
+        android:scaleType="centerCrop"
+        android:src="@drawable/transparent_rect" />
+
     <TextView
         android:id="@+id/tv_fps"
         android:layout_width="80dp"
