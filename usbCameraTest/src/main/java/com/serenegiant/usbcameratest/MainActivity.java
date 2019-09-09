@@ -35,7 +35,9 @@ import android.view.Surface;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import com.serenegiant.common.BaseActivity;
 import com.serenegiant.usb.CameraDialog;
@@ -59,9 +61,10 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 	private UVCCamera mUVCCamera;
 	private SimpleUVCCameraTextureView mUVCCameraView;
 	// for open&start / stop&close camera preview
-	private ImageButton mCameraButton;
+	private ToggleButton mCameraButton;
 	private Surface mPreviewSurface;
 	private static  Activity myActivity;
+	private TextView tv_fps = null;
 
 	@Override
 	protected void onCreate(final Bundle savedInstanceState) {
@@ -70,8 +73,10 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 
 		myActivity = this;
 
-		mCameraButton = (ImageButton)findViewById(R.id.camera_button);
+		mCameraButton = findViewById(R.id.camera_button);
 		mCameraButton.setOnClickListener(mOnClickListener);
+
+		tv_fps = findViewById(R.id.tv_fps);
 
 		mUVCCameraView = (SimpleUVCCameraTextureView)findViewById(R.id.UVCCameraTextureView1);
 		mUVCCameraView.setAspectRatio(UVCCamera.DEFAULT_PREVIEW_WIDTH / (float)UVCCamera.DEFAULT_PREVIEW_HEIGHT);
@@ -141,6 +146,7 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 		@Override
 		public void onAttach(final UsbDevice device) {
 			Toast.makeText(MainActivity.this, "USB_DEVICE_ATTACHED", Toast.LENGTH_SHORT).show();
+			Log.d("onAttache", device.getManufacturerName());
 		}
 
 		@Override
@@ -302,6 +308,9 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
             frameTime = 0;
 			countFrames = 0;
 			Log.d("FPS", "" + fps);
+
+			tv_fps.setText(String.format("FPS: %s", fps));
+
 		}
 	}
 }

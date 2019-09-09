@@ -23,4 +23,6 @@
   -->
 <resources>
     <string name="app_name">USBCameraTest</string>
+    <string name="six15_logo">Six15 Logo</string>
+    <string name="fps">FPS: 30</string>
 </resources>
