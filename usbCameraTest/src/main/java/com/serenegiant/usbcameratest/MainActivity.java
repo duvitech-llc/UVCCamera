@@ -24,10 +24,13 @@
 package com.serenegiant.usbcameratest;
 
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.PixelFormat;
 import android.graphics.SurfaceTexture;
 import android.hardware.usb.UsbDevice;
+import android.media.AudioManager;
+import android.media.SoundPool;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
@@ -50,6 +53,7 @@ import com.serenegiant.usb.USBMonitor.UsbControlBlock;
 import com.serenegiant.usb.UVCCamera;
 import com.serenegiant.widget.SimpleUVCCameraTextureView;
 
+import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.util.Date;
 
@@ -65,6 +69,9 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 	private Surface mPreviewSurface;
 	private static  Activity myActivity;
 	private TextView tv_fps = null;
+	private SoundPool mSoundPool;
+	private ImageButton camera_still = null;
+	private int mSoundId;
 
 	@Override
 	protected void onCreate(final Bundle savedInstanceState) {
@@ -77,6 +84,15 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 		mCameraButton.setOnClickListener(mOnClickListener);
 
 		tv_fps = findViewById(R.id.tv_fps);
+		camera_still = findViewById(R.id.camera_stillcapture);
+		camera_still.setOnClickListener(new View.OnClickListener(){
+
+			@Override
+			public void onClick(View v) {
+
+				mSoundPool.play(mSoundId, 0.2f, 0.2f, 0, 0, 1.0f);	// play shutter sound
+			}
+		});
 
 		mUVCCameraView = (SimpleUVCCameraTextureView)findViewById(R.id.UVCCameraTextureView1);
 		mUVCCameraView.setAspectRatio(UVCCamera.DEFAULT_PREVIEW_WIDTH / (float)UVCCamera.DEFAULT_PREVIEW_HEIGHT);
@@ -90,6 +106,7 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 		super.onStart();
 		mUSBMonitor.register();
 		synchronized (mSync) {
+			loadShutterSound(this);
 			if (mUVCCamera != null) {
 				mUVCCamera.startPreview();
 			}
@@ -139,6 +156,29 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 			}
 		}
 	};
+
+	private void loadShutterSound(final Context context) {
+		Log.d("ShutterSound", "loadShutterSound:");
+		// get system stream type using refrection
+		int streamType;
+		try {
+			final Class<?> audioSystemClass = Class.forName("android.media.AudioSystem");
+			final Field sseField = audioSystemClass.getDeclaredField("STREAM_SYSTEM_ENFORCED");
+			streamType = sseField.getInt(null);
+		} catch (final Exception e) {
+			streamType = AudioManager.STREAM_SYSTEM;	// set appropriate according to your app policy
+		}
+		if (mSoundPool != null) {
+			try {
+				mSoundPool.release();
+			} catch (final Exception e) {
+			}
+			mSoundPool = null;
+		}
+		// load sutter sound from resource
+		mSoundPool = new SoundPool(2, streamType, 0);
+		mSoundId = mSoundPool.load(context, R.raw.camera_click, 1);
+	}
 
 	private Toast mToast;
 
@@ -249,6 +289,10 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 
 	private synchronized void releaseCamera() {
 		synchronized (mSync) {
+			if(mSoundPool!=null){
+				mSoundPool.release();
+				mSoundPool = null;
+			}
 			if (mUVCCamera != null) {
 				try {
 					mUVCCamera.setStatusCallback(null);

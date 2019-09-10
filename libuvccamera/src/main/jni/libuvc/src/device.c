@@ -220,10 +220,45 @@ uvc_error_t uvc_find_device2(uvc_context_t *ctx, uvc_device_t **device, int vid,
  * generate fake libusb_device according to specific params
  * and set it to uvc_device_t to access UVC device on Android7 or later
  */
+uvc_error_t uvc_get_device_with_handle(uvc_context_t *ctx, uvc_device_t **device, struct libusb_device_handle *dev_handle) {
+
+	ENTER();
+
+	LOGD("call libusb_get_device_with_fd");
+	struct libusb_device *usb_dev = libusb_get_device(dev_handle);
+
+	if (LIKELY(usb_dev)) {
+		*device = malloc(sizeof(uvc_device_t/* *device */));
+		(*device)->ctx = ctx;
+		(*device)->ref = 0;
+		(*device)->usb_dev = usb_dev;
+//		libusb_set_device_fd(usb_dev, fd);	// assign fd to libusb_device for non-rooted Android devices
+		uvc_ref_device(*device);
+		UVC_EXIT(UVC_SUCCESS);
+		RETURN(UVC_SUCCESS, int);
+	} else {
+		LOGE("could not find specific device");
+		*device = NULL;
+		RETURN(UVC_ERROR_NO_DEVICE, int);
+	}
+
+}
+
+/**
+ * XXX add for non-rooted Android device, >= Android7
+ * generate fake libusb_device according to specific params
+ * and set it to uvc_device_t to access UVC device on Android7 or later
+ */
 uvc_error_t uvc_get_device_with_fd(uvc_context_t *ctx, uvc_device_t **device,
 		int vid, int pid, const char *serial, int fd, int busnum, int devaddr) {
 
 	ENTER();
+    LOGI("vid: %d", vid);
+    LOGI("pid: %d", pid);
+    LOGI("serial: %s", serial);
+    LOGI("fd: %d", fd);
+    LOGI("busnum: %d", busnum);
+    LOGI("devaddr: %d", devaddr);
 
 	LOGD("call libusb_get_device_with_fd");
 	struct libusb_device *usb_dev = libusb_get_device_with_fd(ctx->usb_ctx, vid, pid, serial, fd, busnum, devaddr);
@@ -266,21 +301,11 @@ uint8_t uvc_get_device_address(uvc_device_t *dev) {
  * @param[out] devh Handle on opened device
  * @return Error opening device or SUCCESS
  */
-uvc_error_t uvc_open(uvc_device_t *dev, uvc_device_handle_t **devh) {
+uvc_error_t uvc_openEx(struct libusb_device_handle *usb_devh, uvc_device_t *dev, uvc_device_handle_t **devh) {
+
 	uvc_error_t ret;
-	struct libusb_device_handle *usb_devh;
 	uvc_device_handle_t *internal_devh;
 	struct libusb_device_descriptor desc;
-
-	UVC_ENTER();
-
-	ret = libusb_open(dev->usb_dev, &usb_devh);
-	UVC_DEBUG("libusb_open() = %d", ret);
-
-	if (UNLIKELY(ret != UVC_SUCCESS)) {
-		UVC_EXIT(ret);
-		return ret;
-	}
 
 	uvc_ref_device(dev);
 
@@ -356,6 +381,23 @@ fail2:
 	UVC_EXIT(ret);
 
 	return ret;
+}
+
+uvc_error_t uvc_open(uvc_device_t *dev, uvc_device_handle_t **devh) {
+	uvc_error_t ret;
+	struct libusb_device_handle *usb_devh;
+
+	UVC_ENTER();
+
+	ret = libusb_open(dev->usb_dev, &usb_devh);
+	UVC_DEBUG("libusb_open() = %d", ret);
+
+	if (UNLIKELY(ret != UVC_SUCCESS)) {
+		UVC_EXIT(ret);
+		return ret;
+	}
+
+    return uvc_openEx(usb_devh, dev, devh);
 }
 
 /**

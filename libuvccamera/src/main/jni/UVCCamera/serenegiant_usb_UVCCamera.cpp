@@ -149,6 +149,7 @@ static jint nativeConnect(JNIEnv *env, jobject thiz,
 	int result = JNI_ERR;
 	UVCCamera *camera = reinterpret_cast<UVCCamera *>(id_camera);
 	const char *c_usbfs = env->GetStringUTFChars(usbfs_str, JNI_FALSE);
+	LOGI("c_usbfs: %s\r\n", c_usbfs);
 	if (LIKELY(camera && (fd > 0))) {
 //		libusb_set_debug(NULL, LIBUSB_LOG_LEVEL_DEBUG);
 		result =  camera->connect(vid, pid, fd, busNum, devAddr, c_usbfs);

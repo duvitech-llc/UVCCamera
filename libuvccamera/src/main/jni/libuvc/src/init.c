@@ -124,10 +124,10 @@ uvc_error_t uvc_init2(uvc_context_t **pctx, struct libusb_context *usb_ctx, cons
 
 	if (usb_ctx == NULL) {
 		if (usbfs && strlen(usbfs) > 0) {
-			LOGD("call #libusb_init2");
+			LOGI("call #libusb_init2");
 			ret = libusb_init2(&ctx->usb_ctx, usbfs);
 		} else {
-			LOGD("call #libusb_init");
+			LOGI("call #libusb_init");
 			ret = libusb_init(&ctx->usb_ctx);
 		}
 		ctx->own_usb_ctx = 1;

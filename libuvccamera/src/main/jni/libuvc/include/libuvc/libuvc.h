@@ -543,7 +543,9 @@ uvc_error_t uvc_find_device2(uvc_context_t *ctx, uvc_device_t **dev, int vid,
 // XXX
 uvc_error_t uvc_get_device_with_fd(uvc_context_t *ctx, uvc_device_t **device,
 		int vid, int pid, const char *serial, int fd, int busnum, int devaddr);
+uvc_error_t uvc_get_device_with_handle(uvc_context_t *ctx, uvc_device_t **device, struct libusb_device_handle *dev_handle);
 
+uvc_error_t uvc_openEx(struct libusb_device_handle *usb_devh, uvc_device_t *dev, uvc_device_handle_t **devh);
 uvc_error_t uvc_open(uvc_device_t *dev, uvc_device_handle_t **devh);
 void uvc_close(uvc_device_handle_t *devh);
 // XXX

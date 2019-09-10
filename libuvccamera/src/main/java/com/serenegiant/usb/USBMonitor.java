@@ -986,15 +986,13 @@ public final class USBMonitor {
 			}
 			mBusNum = busnum;
 			mDevNum = devnum;
-//			if (DEBUG) {
-				if (mConnection != null) {
-					final int desc = mConnection.getFileDescriptor();
-					final byte[] rawDesc = mConnection.getRawDescriptors();
-					Log.i(TAG, String.format(Locale.US, "name=%s,desc=%d,busnum=%d,devnum=%d,rawDesc=", name, desc, busnum, devnum) + rawDesc);
-				} else {
-					Log.e(TAG, "could not connect to device " + name);
-				}
-//			}
+			if (mConnection != null) {
+				final int desc = mConnection.getFileDescriptor();
+				final byte[] rawDesc = mConnection.getRawDescriptors();
+				Log.i(TAG, String.format(Locale.US, "name=%s,desc=%d,busnum=%d,devnum=%d,rawDesc=", name, desc, busnum, devnum) + rawDesc);
+			} else {
+				Log.e(TAG, "could not connect to device " + name);
+			}
 		}
 
 		/**

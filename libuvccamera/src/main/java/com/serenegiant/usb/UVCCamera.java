@@ -190,6 +190,7 @@ public class UVCCamera {
     	int result;
     	try {
 			mCtrlBlock = ctrlBlock.clone();
+			Log.e("TEST", getUSBFSName(mCtrlBlock));
 			result = nativeConnect(mNativePtr,
 				mCtrlBlock.getVenderId(), mCtrlBlock.getProductId(),
 				mCtrlBlock.getFileDescriptor(),
