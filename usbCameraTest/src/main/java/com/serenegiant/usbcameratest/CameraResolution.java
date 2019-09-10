@@ -46,7 +46,7 @@ public class CameraResolution implements Parcelable {
 
     @Override
     public String toString() {
-        return String.format("%i x %i" + width,height);
+        return String.format("%d x %d",width,height);
     }
 
     @Override

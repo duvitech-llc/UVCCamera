@@ -23,19 +23,28 @@
 
 package com.serenegiant.usbcameratest;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.SurfaceTexture;
 import android.hardware.usb.UsbDevice;
 import android.media.AudioManager;
 import android.media.SoundPool;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.SystemClock;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Surface;
 import android.view.View;
@@ -43,7 +52,7 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.ArrayAdapter;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.CheckedTextView;
 import android.widget.ImageButton;
@@ -65,13 +74,24 @@ import com.serenegiant.usb.USBMonitor.UsbControlBlock;
 import com.serenegiant.usb.UVCCamera;
 import com.serenegiant.widget.SimpleUVCCameraTextureView;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
 public final class MainActivity extends BaseActivity implements CameraDialog.CameraDialogParent, IFrameCallback {
+	private static final String TAG = MainActivity.class.getSimpleName();
+	String[] perms = {"android.permission.CAMERA","android.permission.WRITE_EXTERNAL_STORAGE"};
+	int permsRequestCode = 200;
+
+	private boolean cameraAccepted = false;
+	private boolean fileAccepted = false;
 
 	private final Object mSync = new Object();
     // for accessing USB and USB camera
@@ -91,12 +111,83 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 	private ResolutionListAdapter mResAdapter = null;
 	private int mSoundId;
 	private int mSoundZoomId;
+	DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
 
 	private ArrayList<CameraResolution> supportedResolutions = new ArrayList<>();
 	private int currentResolutionIndex = -1;
 
 	private boolean bFirstFPSSinceStart = true;
 	private static int zoom = 0;
+	private AdapterView.OnItemSelectedListener mOnResolutionSelectListener = new AdapterView.OnItemSelectedListener() {
+		@Override
+		public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+
+			Log.i(TAG, "Selected: " + id + " Position: " + position +" Resolution: "+ mResAdapter.getItem(position).toString());
+			currentResolutionIndex = position;
+			if (mSoundPool != null)
+				mSoundPool.play(mSoundZoomId, 0.2f, 0.2f, 0, 0, 1.0f);    // play shutter sound
+			else
+				Log.e("SOUND", "sound pool is empty");
+
+			if(currentResolutionIndex>=supportedResolutions.size()){
+				Log.e(TAG, "Position is out of bounds setting to 0");
+				currentResolutionIndex = 0; // back to default
+			}
+
+			mUVCCamera.stopPreview();
+			if (mPreviewSurface != null) {
+				mPreviewSurface.release();
+				mPreviewSurface = null;
+			}
+
+			try {
+				Thread.sleep(1000);
+			}catch(Exception e){}
+
+
+			try {
+				mUVCCamera.setPreviewSize(supportedResolutions.get(currentResolutionIndex).getWidth(), supportedResolutions.get(currentResolutionIndex).getHeight(), UVCCamera.FRAME_FORMAT_MJPEG);
+				Toast.makeText(myActivity, "" +supportedResolutions.get(currentResolutionIndex).getWidth() + " x " + supportedResolutions.get(currentResolutionIndex).getHeight(), Toast.LENGTH_SHORT).show();
+
+			} catch (final IllegalArgumentException e) {
+				// fallback to YUV mode
+				try {
+					Toast.makeText(myActivity, "Failed Requested Stream", Toast.LENGTH_SHORT).show();
+					mUVCCamera.setPreviewSize(UVCCamera.DEFAULT_PREVIEW_WIDTH, UVCCamera.DEFAULT_PREVIEW_HEIGHT, UVCCamera.DEFAULT_PREVIEW_MODE);
+				} catch (final IllegalArgumentException e1) {
+					mUVCCamera.destroy();
+					Log.e("ERROR", "Could Not set resolution");
+					Toast.makeText(myActivity, "FATAL ERROR", Toast.LENGTH_SHORT).show();
+					return;
+				}
+			}
+
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					// set aspect ration
+					mUVCCameraView.setAspectRatio(supportedResolutions.get(currentResolutionIndex).getWidth()/(float)supportedResolutions.get(currentResolutionIndex).getHeight());
+				}
+			});
+
+			final SurfaceTexture st = mUVCCameraView.getSurfaceTexture();
+			if (st != null) {
+				mPreviewSurface = new Surface(st);
+				mUVCCamera.setPreviewDisplay(mPreviewSurface);
+				bFirstFPSSinceStart = true;
+				mUVCCamera.startPreview();
+				Log.d("getZoom", "" + zoom);
+			}
+
+		}
+
+		@Override
+		public void onNothingSelected(AdapterView<?> parent) {
+
+			Log.i(TAG, "Nothing Selected stays the same");
+		}
+	};
+
 
 	@Override
 	protected void onCreate(final Bundle savedInstanceState) {
@@ -116,6 +207,8 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 		mCameraButton.setOnClickListener(mOnClickListener);
 		loadShutterSound(this);
 		camResSpinner = findViewById(R.id.spinner_resolutions);
+		camResSpinner.setOnItemSelectedListener(mOnResolutionSelectListener);
+		camResSpinner.setPrompt("Select Camera Resolution:");
 		camera_still = findViewById(R.id.camera_stillcapture);
 		camera_still.setOnClickListener(new View.OnClickListener(){
 
@@ -127,6 +220,26 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 						mSoundPool.play(mSoundId, 0.2f, 0.2f, 0, 0, 1.0f);    // play shutter sound
 					else
 						Log.e("SOUND", "sound pool is empty");
+
+					final Bitmap bmp = mUVCCameraView.getBitmap();
+					Calendar cal = Calendar.getInstance();
+					String image_name = dateFormat.format(cal.getTimeInMillis());
+					String root = Environment.getExternalStorageDirectory().toString();
+					File myDir = new File(root);
+					myDir.mkdirs();
+					String fname = "cap-" + image_name + ".jpg";
+					File file = new File(myDir, fname);
+					if (file.exists()) file.delete();
+					Log.i("LOAD", root + "/" + fname);
+					try {
+						FileOutputStream out = new FileOutputStream(file);
+						bmp.compress(Bitmap.CompressFormat.JPEG, 100, out);
+						out.flush();
+						out.close();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+
 				}else{
 					Toast.makeText(myActivity, "Camera OFF", Toast.LENGTH_SHORT).show();
 				}
@@ -197,6 +310,27 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 
 		mUSBMonitor = new USBMonitor(this, mOnDeviceConnectListener);
 
+		if (ContextCompat.checkSelfPermission(this,
+				Manifest.permission.WRITE_EXTERNAL_STORAGE)
+				!= PackageManager.PERMISSION_GRANTED) {
+
+			fileAccepted = true;
+
+		}
+
+		if (ContextCompat.checkSelfPermission(this,
+				Manifest.permission.CAMERA)
+				!= PackageManager.PERMISSION_GRANTED) {
+
+			cameraAccepted = true;
+
+		}
+
+		if(!fileAccepted || !cameraAccepted) {
+			ActivityCompat.requestPermissions(this, perms, permsRequestCode);
+		}
+
+
 	}
 
 	@Override
@@ -261,6 +395,39 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 
 	@Override
 	public void onBackPressed() {
+		Log.d(TAG,"Back Button Pressed");
+		new AlertDialog.Builder(this)
+				.setIcon(android.R.drawable.ic_dialog_alert)
+				.setTitle("Closing HUD Camera Demo")
+				.setMessage("Press Back to exit or Cancel to return to app")
+				.setOnKeyListener(new DialogInterface.OnKeyListener() {
+					@Override
+					public boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
+						switch (keyCode) {
+							case KeyEvent.KEYCODE_BACK:
+								Log.d(TAG, "Finish called");
+								dialog.dismiss();
+								((MainActivity)myActivity).onSuperBackPressed();
+								return true;
+							default:
+								return false;
+						}
+					}
+				})
+				.setPositiveButton("Exit", new DialogInterface.OnClickListener()
+				{
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						finish();
+						((MainActivity)myActivity).onSuperBackPressed();
+					}
+
+				})
+				.setNegativeButton("Cancel", null)
+				.show();
+	}
+
+	private void onSuperBackPressed() {
 		releaseCamera();
 		finish();
 		ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
@@ -367,6 +534,7 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 						currentResolutionIndex = 0;
 						mResAdapter = new ResolutionListAdapter(myActivity, supportedResolutions);
 
+
 					}
 					camera.setStatusCallback(new IStatusCallback() {
 						@Override
@@ -447,7 +615,7 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 					runOnUiThread(new Runnable() {
 						@Override
 						public void run() {
-							// Set Spinner adapter.
+							// Set Spinner adapter
 							camResSpinner.setAdapter(mResAdapter);
 							mCameraButton.setChecked(true);
 						}
@@ -494,6 +662,7 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 				@Override
 				public void run() {
 					mCameraButton.setChecked(false);
+					camResSpinner.setAdapter(null);
 				}
 			});
 		}
@@ -549,6 +718,22 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 		}
 	}
 
+	@Override
+	public void onRequestPermissionsResult(int permsRequestCode, String[] permissions, int[] grantResults){
+
+		switch(permsRequestCode){
+
+			case 200:
+
+				cameraAccepted = grantResults[0]== PackageManager.PERMISSION_GRANTED;
+				fileAccepted = grantResults[1]== PackageManager.PERMISSION_GRANTED;
+
+				break;
+
+		}
+
+	}
+
 	private static final class ResolutionListAdapter extends BaseAdapter {
 
 		private final LayoutInflater mInflater;
@@ -586,8 +771,11 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 				final CameraResolution cam_res = getItem(position);
 				((CheckedTextView)convertView).setText(
 						String.format("%d x %d", cam_res.getWidth(), cam_res.getHeight()));
+
 			}
 			return convertView;
 		}
 	}
+
+
 }
