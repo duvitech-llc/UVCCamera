@@ -27,6 +27,7 @@
     android:id="@+id/container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/BLACK"
     tools:context="com.serenegiant.usbcameratest.MainActivity"
     tools:ignore="MergeRootFrame" >
 
@@ -70,29 +71,40 @@
         android:scaleType="centerCrop"
         android:src="@drawable/transparent_rect" />
 
-    <ImageButton
-        android:id="@+id/camera_menu"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
+    <android.support.v7.widget.LinearLayoutCompat
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_centerVertical="true"
+        android:layout_marginStart="16dp"
+        android:orientation="vertical">
+
+        <ImageView
+            android:id="@+id/zoom_plus"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_alignParentStart="true"
+            android:src="@drawable/zoom_plus" />
+
+        <ImageView
+            android:id="@+id/zoom_minus"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_below="@id/zoom_plus"
+            android:layout_alignParentStart="true"
+            android:layout_marginTop="32dp"
+            android:src="@drawable/zoom_minus" />
+    </android.support.v7.widget.LinearLayoutCompat>
+
+
+    <Spinner
+        android:id="@+id/spinner_resolutions"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         android:layout_alignParentBottom="true"
-        android:layout_marginEnd="8dp"
+        android:layout_marginRight="16dp"
         android:layout_marginBottom="8dp"
-        android:background="@drawable/ic_menu"
-        android:contentDescription="@string/camera"
-        android:scaleType="centerCrop"
-        android:src="@drawable/transparent_rect" />
-
-    <TextView
-        android:id="@+id/tv_fps"
-        android:layout_width="80dp"
-        android:layout_height="28dp"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginStart="8dp"
-        android:layout_marginBottom="8dp"
-        android:gravity="start|bottom"
-        android:padding="4dp"
-        android:text="@string/fps" />
+        android:spinnerMode="dialog" />
 
 </RelativeLayout>

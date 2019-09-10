@@ -532,12 +532,14 @@ public final class USBMonitor {
 				if (mOnDeviceConnectListener != null) {
 					for (int i = 0; i < n; i++) {
 						final UsbDevice device = devices.get(i);
-						mAsyncHandler.post(new Runnable() {
-							@Override
-							public void run() {
-								mOnDeviceConnectListener.onAttach(device);
-							}
-						});
+						if(device.getVendorId() == 11716) {
+							mAsyncHandler.post(new Runnable() {
+								@Override
+								public void run() {
+									mOnDeviceConnectListener.onAttach(device);
+								}
+							});
+						}
 					}
 				}
 			}

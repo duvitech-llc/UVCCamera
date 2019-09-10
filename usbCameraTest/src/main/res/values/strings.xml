@@ -22,7 +22,9 @@
   ~  may have a different license, see the respective files.
   -->
 <resources>
-    <string name="app_name">USBCameraTest</string>
+    <string name="app_name">HUD Camera Test</string>
     <string name="six15_logo">Six15 Logo</string>
     <string name="fps">FPS: 30</string>
+    <string name="sel_camera_resolution">Resolution</string>
+    <string name="select_resolution">Select Resolution</string>
 </resources>
