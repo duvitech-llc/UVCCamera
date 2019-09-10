@@ -37,6 +37,8 @@ import android.util.Log;
 import android.view.Surface;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -47,6 +49,7 @@ import com.serenegiant.usb.CameraDialog;
 import com.serenegiant.usb.IButtonCallback;
 import com.serenegiant.usb.IFrameCallback;
 import com.serenegiant.usb.IStatusCallback;
+import com.serenegiant.usb.Size;
 import com.serenegiant.usb.USBMonitor;
 import com.serenegiant.usb.USBMonitor.OnDeviceConnectListener;
 import com.serenegiant.usb.USBMonitor.UsbControlBlock;
@@ -72,6 +75,7 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 	private SoundPool mSoundPool;
 	private ImageButton camera_still = null;
 	private int mSoundId;
+	private static int zoom = 0;
 
 	@Override
 	protected void onCreate(final Bundle savedInstanceState) {
@@ -79,6 +83,13 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 		setContentView(R.layout.activity_main);
 
 		myActivity = this;
+
+		getWindow().addFlags(
+				WindowManager.LayoutParams.FLAG_FULLSCREEN
+						| WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+						| WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
+						| WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
+						| WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
 
 		mCameraButton = findViewById(R.id.camera_button);
 		mCameraButton.setOnClickListener(mOnClickListener);
@@ -90,7 +101,12 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 			@Override
 			public void onClick(View v) {
 
-				mSoundPool.play(mSoundId, 0.2f, 0.2f, 0, 0, 1.0f);	// play shutter sound
+				if(mSoundPool != null)
+					mSoundPool.play(mSoundId, 0.2f, 0.2f, 0, 0, 1.0f);	// play shutter sound
+				else
+					Log.e("SOUND", "sound pool is empty");
+				mUVCCamera.setZoom(200);
+				//mUVCCamera.getUsbControlBlock().getConnection().controlTransfer()
 			}
 		});
 
@@ -186,7 +202,7 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 		@Override
 		public void onAttach(final UsbDevice device) {
 			Toast.makeText(MainActivity.this, "USB_DEVICE_ATTACHED", Toast.LENGTH_SHORT).show();
-			Log.d("onAttache", device.getManufacturerName());
+			// Log.d("onAttached", device.getManufacturerName());
 		}
 
 		@Override
@@ -197,6 +213,12 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 				public void run() {
 					final UVCCamera camera = new UVCCamera();
 					camera.open(ctrlBlock);
+
+					camera.updateCameraParams();
+					for(Size z:camera.getSupportedSizeList()){
+						Log.e("SIZE", "Res; " + z.width + " x " + z.height);
+					}
+
 					camera.setStatusCallback(new IStatusCallback() {
 						@Override
 						public void onStatus(final int statusClass, final int event, final int selector,
@@ -262,6 +284,7 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 						camera.setPreviewDisplay(mPreviewSurface);
 //						camera.setFrameCallback(mIFrameCallback, UVCCamera.PIXEL_FORMAT_RGB565/*UVCCamera.PIXEL_FORMAT_NV21*/);
 						camera.startPreview();
+						Log.d("getZoom", "" + zoom);
 					}
 					synchronized (mSync) {
 						mUVCCamera = camera;

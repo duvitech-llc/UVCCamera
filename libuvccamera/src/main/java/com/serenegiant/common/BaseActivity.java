@@ -47,20 +47,20 @@ import com.serenegiant.utils.PermissionCheck;
 public class BaseActivity extends AppCompatActivity
 	implements MessageDialogFragmentV4.MessageDialogListener {
 
-	private static boolean DEBUG = false;	// FIXME
+	private static boolean DEBUG = false;	// FIXME 実働時はfalseにセットすること
 	private static final String TAG = BaseActivity.class.getSimpleName();
 
-	/** UI Handler */
+	/** UI操作のためのHandler */
 	private final Handler mUIHandler = new Handler(Looper.getMainLooper());
 	private final Thread mUiThread = mUIHandler.getLooper().getThread();
-	/** Handler for processing on worker threads */
+	/** ワーカースレッド上で処理するためのHandler */
 	private Handler mWorkerHandler;
 	private long mWorkerThreadID = -1;
 
 	@Override
 	protected void onCreate(final Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		// Create Worker Thread
+		// ワーカースレッドを生成
 		if (mWorkerHandler == null) {
 			mWorkerHandler = HandlerThreadHandler.createHandler(TAG);
 			mWorkerThreadID = mWorkerHandler.getLooper().getThread().getId();
@@ -75,7 +75,7 @@ public class BaseActivity extends AppCompatActivity
 
 	@Override
 	protected synchronized void onDestroy() {
-		// Destroy Worker Thread
+		// ワーカースレッドを破棄
 		if (mWorkerHandler != null) {
 			try {
 				mWorkerHandler.getLooper().quit();
@@ -89,7 +89,7 @@ public class BaseActivity extends AppCompatActivity
 
 //================================================================================
 	/**
-	 * UI Runnable
+	 * UIスレッドでRunnableを実行するためのヘルパーメソッド
 	 * @param task
 	 * @param duration
 	 */
@@ -108,7 +108,7 @@ public class BaseActivity extends AppCompatActivity
 	}
 
 	/**
-	 * UI Runnable
+	 * UIスレッド上で指定したRunnableが実行待ちしていれば実行待ちを解除する
 	 * @param task
 	 */
 	public final void removeFromUiThread(final Runnable task) {
@@ -117,7 +117,8 @@ public class BaseActivity extends AppCompatActivity
 	}
 
 	/**
-	 * Runnable
+	 * ワーカースレッド上で指定したRunnableを実行する
+	 * 未実行の同じRunnableがあればキャンセルされる(後から指定した方のみ実行される)
 	 * @param task
 	 * @param delayMillis
 	 */
@@ -138,7 +139,7 @@ public class BaseActivity extends AppCompatActivity
 	}
 
 	/**
-	 * Runnable
+	 * 指定したRunnableをワーカースレッド上で実行予定であればキャンセルする
 	 * @param task
 	 */
 	protected final synchronized void removeEvent(final Runnable task) {
@@ -153,7 +154,7 @@ public class BaseActivity extends AppCompatActivity
 //================================================================================
 	private Toast mToast;
 	/**
-	 * Toast
+	 * Toastでメッセージを表示
 	 * @param msg
 	 */
 	protected void showToast(@StringRes final int msg, final Object... args) {
@@ -163,7 +164,7 @@ public class BaseActivity extends AppCompatActivity
 	}
 
 	/**
-	 * Clear Toast
+	 * Toastが表示されていればキャンセルする
 	 */
 	protected void clearToast() {
 		removeFromUiThread(mShowToastTask);
@@ -205,7 +206,7 @@ public class BaseActivity extends AppCompatActivity
 
 //================================================================================
 	/**
-	 * MessageDialogFragment Callback Listener
+	 * MessageDialogFragmentメッセージダイアログからのコールバックリスナー
 	 * @param dialog
 	 * @param requestCode
 	 * @param permissions
@@ -215,20 +216,20 @@ public class BaseActivity extends AppCompatActivity
 	@Override
 	public void onMessageDialogResult(final MessageDialogFragmentV4 dialog, final int requestCode, final String[] permissions, final boolean result) {
 		if (result) {
-			// Request Permission
+			// メッセージダイアログでOKを押された時はパーミッション要求する
 			if (BuildCheck.isMarshmallow()) {
 				requestPermissions(permissions, requestCode);
 				return;
 			}
 		}
-		// checkPermissionResult
+		// メッセージダイアログでキャンセルされた時とAndroid6でない時は自前でチェックして#checkPermissionResultを呼び出す
 		for (final String permission: permissions) {
 			checkPermissionResult(requestCode, permission, PermissionCheck.hasPermission(this, permission));
 		}
 	}
 
 	/**
-	 * Permission Request Results
+	 * パーミッション要求結果を受け取るためのメソッド
 	 * @param requestCode
 	 * @param permissions
 	 * @param grantResults
@@ -243,12 +244,14 @@ public class BaseActivity extends AppCompatActivity
 	}
 
 	/**
-	 * Display Missing Permissions
+	 * パーミッション要求の結果をチェック
+	 * ここではパーミッションを取得できなかった時にToastでメッセージ表示するだけ
 	 * @param requestCode
 	 * @param permission
 	 * @param result
 	 */
 	protected void checkPermissionResult(final int requestCode, final String permission, final boolean result) {
+		// パーミッションがないときにはメッセージを表示する
 		if (!result && (permission != null)) {
 			if (Manifest.permission.RECORD_AUDIO.equals(permission)) {
 				showToast(R.string.permission_audio);
@@ -262,15 +265,16 @@ public class BaseActivity extends AppCompatActivity
 		}
 	}
 
-	// Permission Request Codes
+	// 動的パーミッション要求時の要求コード
 	protected static final int REQUEST_PERMISSION_WRITE_EXTERNAL_STORAGE = 0x12345;
 	protected static final int REQUEST_PERMISSION_AUDIO_RECORDING = 0x234567;
 	protected static final int REQUEST_PERMISSION_NETWORK = 0x345678;
 	protected static final int REQUEST_PERMISSION_CAMERA = 0x537642;
 
 	/**
-	 * Check for External Storage Write Permissions
-	 * @return true
+	 * 外部ストレージへの書き込みパーミッションが有るかどうかをチェック
+	 * なければ説明ダイアログを表示する
+	 * @return true 外部ストレージへの書き込みパーミッションが有る
 	 */
 	protected boolean checkPermissionWriteExternalStorage() {
 		if (!PermissionCheck.hasWriteExternalStorage(this)) {
@@ -283,8 +287,9 @@ public class BaseActivity extends AppCompatActivity
 	}
 
 	/**
-	 * Check for Audio Permissions
-	 * @return true
+	 * 録音のパーミッションが有るかどうかをチェック
+	 * なければ説明ダイアログを表示する
+	 * @return true 録音のパーミッションが有る
 	 */
 	protected boolean checkPermissionAudio() {
 		if (!PermissionCheck.hasAudio(this)) {
@@ -297,8 +302,9 @@ public class BaseActivity extends AppCompatActivity
 	}
 
 	/**
-	 * Check for Network Permissions
-	 * @return true
+	 * ネットワークアクセスのパーミッションが有るかどうかをチェック
+	 * なければ説明ダイアログを表示する
+	 * @return true ネットワークアクセスのパーミッションが有る
 	 */
 	protected boolean checkPermissionNetwork() {
 		if (!PermissionCheck.hasNetwork(this)) {
@@ -311,8 +317,9 @@ public class BaseActivity extends AppCompatActivity
 	}
 
 	/**
-	 * Check for Camera Permissions
-	 * @return true
+	 * カメラアクセスのパーミッションがあるかどうかをチェック
+	 * なければ説明ダイアログを表示する
+	 * @return true カメラアクセスのパーミッションが有る
 	 */
 	protected boolean checkPermissionCamera() {
 		if (!PermissionCheck.hasCamera(this)) {

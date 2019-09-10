@@ -44,8 +44,8 @@ public class UVCCamera {
 	private static final String TAG = UVCCamera.class.getSimpleName();
 	private static final String DEFAULT_USBFS = "/dev/bus/usb";
 
-	public static final int DEFAULT_PREVIEW_WIDTH = 640;
-	public static final int DEFAULT_PREVIEW_HEIGHT = 480;
+	public static final int DEFAULT_PREVIEW_WIDTH = 1280;
+	public static final int DEFAULT_PREVIEW_HEIGHT = 720;
 	public static final int DEFAULT_PREVIEW_MODE = 0;
 	public static final int DEFAULT_PREVIEW_MIN_FPS = 1;
 	public static final int DEFAULT_PREVIEW_MAX_FPS = 30;
@@ -125,8 +125,8 @@ public class UVCCamera {
 	}
 
 	private UsbControlBlock mCtrlBlock;
-    protected long mControlSupports;			// Function flags supported by camera control
-    protected long mProcSupports;				// Function flags supported by the processing unit
+    protected long mControlSupports;			// カメラコントロールでサポートしている機能フラグ
+    protected long mProcSupports;				// プロセッシングユニットでサポートしている機能フラグ
     protected int mCurrentFrameFormat = FRAME_FORMAT_MJPEG;
 	protected int mCurrentWidth = DEFAULT_PREVIEW_WIDTH, mCurrentHeight = DEFAULT_PREVIEW_HEIGHT;
 	protected float mCurrentBandwidthFactor = DEFAULT_BANDWIDTH;
@@ -190,7 +190,6 @@ public class UVCCamera {
     	int result;
     	try {
 			mCtrlBlock = ctrlBlock.clone();
-			Log.e("TEST", getUSBFSName(mCtrlBlock));
 			result = nativeConnect(mNativePtr,
 				mCtrlBlock.getVenderId(), mCtrlBlock.getProductId(),
 				mCtrlBlock.getFileDescriptor(),
@@ -238,7 +237,7 @@ public class UVCCamera {
     	stopPreview();
     	if (mNativePtr != 0) {
     		nativeRelease(mNativePtr);
-//    		mNativePtr = 0;	// nativeDestroy
+//    		mNativePtr = 0;	// nativeDestroyを呼ぶのでここでクリアしちゃダメ
     	}
     	if (mCtrlBlock != null) {
 			mCtrlBlock.close();
@@ -867,9 +866,11 @@ public class UVCCamera {
  		   final float range = Math.abs(mZoomMax - mZoomMin);
  		   if (range > 0) {
  			   final int z = (int)(zoom / 100.f * range) + mZoomMin;
-// 			   Log.d(TAG, "setZoom:zoom=" + zoom + " ,value=" + z);
+			   Log.d(TAG, "setZoom:zoom=" + zoom + " ,value=" + z);
  			   nativeSetZoom(mNativePtr, z);
  		   }
+			Log.d(TAG, "setZoom:zoom=" + zoom );
+			nativeSetZoom(mNativePtr, zoom);
     	}
     }
 
@@ -924,20 +925,20 @@ public class UVCCamera {
 	    	    	nativeUpdateWhiteBlanceLimit(mNativePtr);
 	    	    	nativeUpdateFocusLimit(mNativePtr);
     	    	}
-    	    	if (DEBUG) {
-					dumpControls(mControlSupports);
-					dumpProc(mProcSupports);
-					Log.v(TAG, String.format("Brightness:min=%d,max=%d,def=%d", mBrightnessMin, mBrightnessMax, mBrightnessDef));
-					Log.v(TAG, String.format("Contrast:min=%d,max=%d,def=%d", mContrastMin, mContrastMax, mContrastDef));
-					Log.v(TAG, String.format("Sharpness:min=%d,max=%d,def=%d", mSharpnessMin, mSharpnessMax, mSharpnessDef));
-					Log.v(TAG, String.format("Gain:min=%d,max=%d,def=%d", mGainMin, mGainMax, mGainDef));
-					Log.v(TAG, String.format("Gamma:min=%d,max=%d,def=%d", mGammaMin, mGammaMax, mGammaDef));
-					Log.v(TAG, String.format("Saturation:min=%d,max=%d,def=%d", mSaturationMin, mSaturationMax, mSaturationDef));
-					Log.v(TAG, String.format("Hue:min=%d,max=%d,def=%d", mHueMin, mHueMax, mHueDef));
-					Log.v(TAG, String.format("Zoom:min=%d,max=%d,def=%d", mZoomMin, mZoomMax, mZoomDef));
-					Log.v(TAG, String.format("WhiteBlance:min=%d,max=%d,def=%d", mWhiteBlanceMin, mWhiteBlanceMax, mWhiteBlanceDef));
-					Log.v(TAG, String.format("Focus:min=%d,max=%d,def=%d", mFocusMin, mFocusMax, mFocusDef));
-				}
+    	    	// comment out the dump
+				dumpControls(mControlSupports);
+				dumpProc(mProcSupports);
+				Log.v(TAG, String.format("Brightness:min=%d,max=%d,def=%d", mBrightnessMin, mBrightnessMax, mBrightnessDef));
+				Log.v(TAG, String.format("Contrast:min=%d,max=%d,def=%d", mContrastMin, mContrastMax, mContrastDef));
+				Log.v(TAG, String.format("Sharpness:min=%d,max=%d,def=%d", mSharpnessMin, mSharpnessMax, mSharpnessDef));
+				Log.v(TAG, String.format("Gain:min=%d,max=%d,def=%d", mGainMin, mGainMax, mGainDef));
+				Log.v(TAG, String.format("Gamma:min=%d,max=%d,def=%d", mGammaMin, mGammaMax, mGammaDef));
+				Log.v(TAG, String.format("Saturation:min=%d,max=%d,def=%d", mSaturationMin, mSaturationMax, mSaturationDef));
+				Log.v(TAG, String.format("Hue:min=%d,max=%d,def=%d", mHueMin, mHueMax, mHueDef));
+				Log.v(TAG, String.format("Zoom:min=%d,max=%d,def=%d", mZoomMin, mZoomMax, mZoomDef));
+				Log.v(TAG, String.format("WhiteBlance:min=%d,max=%d,def=%d", mWhiteBlanceMin, mWhiteBlanceMax, mWhiteBlanceDef));
+				Log.v(TAG, String.format("Focus:min=%d,max=%d,def=%d", mFocusMin, mFocusMax, mFocusDef));
+
 			}
     	} else {
     		mControlSupports = mProcSupports = 0;
