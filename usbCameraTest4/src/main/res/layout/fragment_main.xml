@@ -34,7 +34,7 @@
     tools:context="com.serenegiant.serviceviewtest.MainActivity" >
 
 
-	<com.serenegiant.widget.UVCCameraTextureView
+	<com.duvitech.widget.UVCCameraTextureView
         android:id="@+id/camera_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

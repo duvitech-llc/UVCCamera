@@ -3,7 +3,7 @@
 
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.serenegiant.usbcameratest" >
+    package="com.duvitech.usbcameratest" >
 
     <uses-permission android:name="android.permission.USB_PERMISSION" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -18,7 +18,7 @@
         android:screenOrientation="landscape"
         android:theme="@style/Theme.AppCompat.Light" >
         <activity
-            android:name="com.serenegiant.usbcameratest.MainActivity"
+            android:name="com.duvitech.usbcameratest.MainActivity"
             android:theme="@style/Theme.AppCompat.DayNight.NoActionBar.FullScreen"
             android:screenOrientation="landscape"
             android:label="@string/app_name" >
