@@ -150,7 +150,7 @@ public class HudService extends BaseService {
 		PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
 
 		mBuilder = new NotificationCompat.Builder(this, serviceChannel)
-				.setSmallIcon(R.drawable.ic_launcher)
+				.setSmallIcon(R.drawable.ic_stat_iware_icon)
 				.setContentTitle(getText(R.string.app_name))
 				.setContentText(text)
 				.setAutoCancel(false)
