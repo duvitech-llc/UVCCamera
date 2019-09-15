@@ -200,7 +200,7 @@ static JNINativeMethod methods[] = {
 	{ "nativeDestroy",					"(J)V", (void *) nativeDestroy },
 
 	{ "nativeGetState",					"(J)I", (void *) nativeGetState },
-	{ "nativeSetPipeline",				"(JLcom/serenegiant/usb/IPipeline;)I", (void *) nativeSetPipeline },
+	{ "nativeSetPipeline",				"(JLcom/six15/usb/IPipeline;)I", (void *) nativeSetPipeline },
 
 	{ "nativeStart",					"(J)I", (void *) nativeStart },
 	{ "nativeStop",						"(J)I", (void *) nativeStop },
@@ -210,7 +210,7 @@ static JNINativeMethod methods[] = {
 int register_convert_pipeline(JNIEnv *env) {
 	LOGV("register_convert_pipeline:");
 	if (registerNativeMethods(env,
-		"com/serenegiant/usb/ConvertPipeline",
+		"com/six15/usb/ConvertPipeline",
 		methods, NUM_ARRAY_ELEMENTS(methods)) < 0) {
 		return -1;
 	}

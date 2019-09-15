@@ -262,18 +262,18 @@ static JNINativeMethod methods[] = {
 	{ "nativeDestroy",					"(J)V", (void *) nativeDestroy },
 
 	{ "nativeGetState",					"(J)I", (void *) nativeGetState },
-	{ "nativeSetPipeline",				"(JLcom/serenegiant/usb/IPipeline;)I", (void *) nativeSetPipeline },
+	{ "nativeSetPipeline",				"(JLcom/six15/usb/IPipeline;)I", (void *) nativeSetPipeline },
 
 	{ "nativeStart",					"(J)I", (void *) nativeStart },
 	{ "nativeStop",						"(J)I", (void *) nativeStop },
 
-	{ "nativeSetFrameCallback",			"(JLcom/serenegiant/usb/IFrameCallback;I)I", (void *) nativeSetFrameCallback },
+	{ "nativeSetFrameCallback",			"(JLcom/six15/usb/IFrameCallback;I)I", (void *) nativeSetFrameCallback },
 };
 
 int register_callback_pipeline(JNIEnv *env) {
 	LOGV("register_callback_pipeline:");
 	if (registerNativeMethods(env,
-		"com/serenegiant/usb/FrameCallbackPipeline",
+		"com/six15/usb/FrameCallbackPipeline",
 		methods, NUM_ARRAY_ELEMENTS(methods)) < 0) {
 		return -1;
 	}

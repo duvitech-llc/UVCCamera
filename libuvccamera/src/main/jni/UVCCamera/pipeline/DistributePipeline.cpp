@@ -193,9 +193,9 @@ static JNINativeMethod methods[] = {
 	{ "nativeDestroy",					"(J)V", (void *) nativeDestroy },
 
 	{ "nativeGetState",					"(J)I", (void *) nativeGetState },
-	{ "nativeSetPipeline",				"(JLcom/serenegiant/usb/IPipeline;)I", (void *) nativeSetPipeline },
-	{ "nativeAddPipeline",				"(JLcom/serenegiant/usb/IPipeline;)I", (void *) nativeAddPipeline },
-	{ "nativeRemovePipeline",			"(JLcom/serenegiant/usb/IPipeline;)I", (void *) nativeRemovePipeline },
+	{ "nativeSetPipeline",				"(JLcom/six15/usb/IPipeline;)I", (void *) nativeSetPipeline },
+	{ "nativeAddPipeline",				"(JLcom/six15/usb/IPipeline;)I", (void *) nativeAddPipeline },
+	{ "nativeRemovePipeline",			"(JLcom/six15/usb/IPipeline;)I", (void *) nativeRemovePipeline },
 
 	{ "nativeStart",					"(J)I", (void *) nativeStart },
 	{ "nativeStop",						"(J)I", (void *) nativeStop },
@@ -204,7 +204,7 @@ static JNINativeMethod methods[] = {
 int register_distribute_pipeline(JNIEnv *env) {
 	LOGV("register_distribute_pipeline:");
 	if (registerNativeMethods(env,
-		"com/serenegiant/usb/DistributePipeline",
+		"com/six15/usb/DistributePipeline",
 		methods, NUM_ARRAY_ELEMENTS(methods)) < 0) {
 		return -1;
 	}

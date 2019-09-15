@@ -312,7 +312,7 @@ static jint nativeStop(JNIEnv *env, jobject thiz,
 static JNINativeMethod methods_publisher_pipeline[] = {
 	{ "nativeCreate", 		"(Ljava/lang/String;Ljava/lang/String;)J", (void *) nativeCreate},
 	{ "nativeDestroy",		"(J)V", (void *) nativeDestroy},
-	{ "nativeSetPipeline",	"(JLcom/serenegiant/usb/IPipeline;)I", (void *) nativeSetPipeline },
+	{ "nativeSetPipeline",	"(JLcom/six15/usb/IPipeline;)I", (void *) nativeSetPipeline },
 
 	{ "nativeGetState",		"(J)I", (void *) nativeGetState },
 	{ "nativeStart",		"(J)I", (void *) nativeStart },
@@ -322,7 +322,7 @@ static JNINativeMethod methods_publisher_pipeline[] = {
 int register_publisher_pipeline(JNIEnv *env) {
 	LOGV("register PublisherPipeline:");
 	if (registerNativeMethods(env,
-		"com/serenegiant/usb/PublisherPipeline",
+		"com/six15/usb/PublisherPipeline",
 		methods_publisher_pipeline, NUM_ARRAY_ELEMENTS(methods_publisher_pipeline)) < 0) {
 		return -1;
 	}
