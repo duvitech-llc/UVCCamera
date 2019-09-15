@@ -3,10 +3,10 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/UVCCamera.iml" filepath="$PROJECT_DIR$/UVCCamera.iml" />
+      <module fileurl="file://$PROJECT_DIR$/hud-service/hud-service.iml" filepath="$PROJECT_DIR$/hud-service/hud-service.iml" />
       <module fileurl="file://$PROJECT_DIR$/hud-usb-demo/hud-usb-demo.iml" filepath="$PROJECT_DIR$/hud-usb-demo/hud-usb-demo.iml" />
       <module fileurl="file://$PROJECT_DIR$/libuvccamera/libuvccamera.iml" filepath="$PROJECT_DIR$/libuvccamera/libuvccamera.iml" />
       <module fileurl="file://$PROJECT_DIR$/usbCameraCommon/usbCameraCommon.iml" filepath="$PROJECT_DIR$/usbCameraCommon/usbCameraCommon.iml" />
-      <module fileurl="file://$PROJECT_DIR$/usbCameraTest4/usbCameraTest4.iml" filepath="$PROJECT_DIR$/usbCameraTest4/usbCameraTest4.iml" />
     </modules>
   </component>
 </project>
