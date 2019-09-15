@@ -21,7 +21,40 @@
  *  may have a different license, see the respective files.
  */
 
-include ':libuvccamera'
-include ':usbCameraCommon'
-include ':hud-usb-demo'
-include ':usbCameraTest4'
+apply plugin: 'com.android.application'
+
+android {
+	compileSdkVersion versionCompiler
+
+    compileOptions {
+		sourceCompatibility javaSourceCompatibility
+		targetCompatibility javaTargetCompatibility
+	}
+
+    defaultConfig {
+        applicationId "com.six15.usbcameratest"
+        minSdkVersion 21
+		targetSdkVersion versionTarget
+		versionCode 9
+		versionName "4.00"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-project.txt'
+        }
+    }
+}
+
+dependencies {
+	api fileTree(dir: 'libs', include: ['*.jar'])
+
+	implementation "com.android.support:support-v4:${supportLibVersion}"
+	implementation "com.android.support:support-annotations:${supportLibVersion}"
+
+	implementation("com.serenegiant:common:${commonLibVersion}") {
+		exclude module: 'support-v4'
+	}
+	implementation project(':libuvccamera')
+}
