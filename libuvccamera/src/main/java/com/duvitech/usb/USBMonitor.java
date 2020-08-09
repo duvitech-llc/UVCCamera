@@ -43,6 +43,7 @@ import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
+import android.os.Build;
 import android.os.Handler;
 import android.text.TextUtils;
 import android.util.Log;
@@ -894,8 +895,10 @@ public final class USBMonitor {
 				info.product = device.getProductName();
 				info.serial = device.getSerialNumber();
 			}
-			if (BuildCheck.isMarshmallow()) {
-				info.usb_version = device.getVersion();
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+					info.usb_version = device.getVersion();
+			}else{
+				info.usb_version = null;
 			}
 			if ((manager != null) && manager.hasPermission(device)) {
 				final UsbDeviceConnection connection = manager.openDevice(device);

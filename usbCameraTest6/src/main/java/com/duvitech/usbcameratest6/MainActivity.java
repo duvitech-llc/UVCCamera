@@ -43,7 +43,7 @@ import com.duvitech.encoder.MediaMuxerWrapper;
 import com.duvitech.usb.CameraDialog;
 import com.duvitech.usb.USBMonitor;
 import com.duvitech.usb.UVCCamera;
-import com.duvitech.usbcameracommon.UVCCameraHandlerMultiSurface;
+import com.duvitech.usbcamera.UVCCameraHandlerMultiSurface;
 import com.duvitech.widget.CameraViewInterface;
 
 import com.duvitech.usbcameratest6.R;

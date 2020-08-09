@@ -21,13 +21,7 @@
  *  may have a different license, see the respective files.
  */
 
-include ':libuvccamera'
-include ':usbCameraTest'
-include ':usbCameraTest0'
-include ':usbCameraTest2'
-include ':usbCameraTest3'
-include ':usbCameraTest4'
-include ':usbCameraTest5'
-include ':usbCameraTest6'
-include ':usbCameraTest7'
-include ':usbCameraTest8'
+package com.duvitech.encoder;
+
+public interface IAudioEncoder {
+}

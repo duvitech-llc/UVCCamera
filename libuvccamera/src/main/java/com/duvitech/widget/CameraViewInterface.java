@@ -21,13 +21,27 @@
  *  may have a different license, see the respective files.
  */
 
-include ':libuvccamera'
-include ':usbCameraTest'
-include ':usbCameraTest0'
-include ':usbCameraTest2'
-include ':usbCameraTest3'
-include ':usbCameraTest4'
-include ':usbCameraTest5'
-include ':usbCameraTest6'
-include ':usbCameraTest7'
-include ':usbCameraTest8'
+package com.duvitech.widget;
+
+import android.graphics.Bitmap;
+import android.graphics.SurfaceTexture;
+import android.view.Surface;
+
+import com.duvitech.encoder.IVideoEncoder;
+import com.serenegiant.widget.IAspectRatioView;
+
+public interface CameraViewInterface extends IAspectRatioView {
+	public interface Callback {
+		public void onSurfaceCreated(CameraViewInterface view, Surface surface);
+		public void onSurfaceChanged(CameraViewInterface view, Surface surface, int width, int height);
+		public void onSurfaceDestroy(CameraViewInterface view, Surface surface);
+	}
+	public void onPause();
+	public void onResume();
+	public void setCallback(Callback callback);
+	public SurfaceTexture getSurfaceTexture();
+	public Surface getSurface();
+	public boolean hasSurface();
+	public void setVideoEncoder(final IVideoEncoder encoder);
+	public Bitmap captureStillImage();
+}

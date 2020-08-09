@@ -44,8 +44,7 @@ import com.duvitech.usb.CameraDialog;
 import com.duvitech.usb.USBMonitor;
 import com.duvitech.usb.UVCCamera;
 
-import com.duvitech.usbcameracommon.UVCCameraHandler;
-import com.duvitech.usbcameratest8.R;
+import com.duvitech.usbcamera.UVCCameraHandler;
 import com.serenegiant.utils.ViewAnimationHelper;
 import com.duvitech.widget.CameraViewInterface;
 

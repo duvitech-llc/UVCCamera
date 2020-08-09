@@ -41,8 +41,7 @@ import com.duvitech.usb.USBMonitor;
 import com.duvitech.usb.UVCCamera;
 import com.duvitech.common.BaseActivity;
 
-import com.duvitech.usbcameracommon.UVCCameraHandler;
-import com.duvitech.usbcameratest3.R;
+import com.duvitech.usbcamera.UVCCameraHandler;
 import com.duvitech.widget.CameraViewInterface;
 
 public final class MainActivity extends BaseActivity implements CameraDialog.CameraDialogParent {
