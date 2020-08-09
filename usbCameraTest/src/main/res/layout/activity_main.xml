@@ -74,9 +74,10 @@
     <android.support.v7.widget.LinearLayoutCompat
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_above="@+id/btnTest"
         android:layout_alignParentStart="true"
-        android:layout_centerVertical="true"
         android:layout_marginStart="16dp"
+        android:layout_marginBottom="84dp"
         android:orientation="vertical">
 
         <ImageView
@@ -107,5 +108,14 @@
         android:layout_marginBottom="2dp"
         android:popupTheme="@style/customSpinnerDialog"
         android:spinnerMode="dialog" />
+
+    <ToggleButton
+        android:id="@+id/btnTest"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="10dp"
+        android:layout_marginBottom="10dp" />
 
 </RelativeLayout>

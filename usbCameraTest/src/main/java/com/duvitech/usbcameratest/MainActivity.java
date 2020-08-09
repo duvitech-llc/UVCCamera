@@ -38,6 +38,7 @@ import android.media.SoundPool;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
@@ -108,11 +109,91 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 	private int mSoundZoomId;
 	DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
 
+	private ToggleButton mCameraTestButton;
+
 	private ArrayList<CameraResolution> supportedResolutions = new ArrayList<>();
 	private int currentResolutionIndex = -1;
 
 	private boolean bFirstFPSSinceStart = true;
 	private static int zoom = 0;
+
+
+	long startTime = 0;
+
+	//runs without a timer by reposting this handler at the end of the runnable
+	Handler timerHandler = new Handler();
+	Runnable timerRunnable = new Runnable() {
+
+		@Override
+		public void run() {
+			long millis = System.currentTimeMillis() - startTime;
+			int seconds = (int) (millis / 1000);
+			int minutes = seconds / 60;
+			seconds = seconds % 60;
+
+			if(mUVCCameraView != null) {
+				Log.d("CAM-TEST", "Changing Resolution");
+				currentResolutionIndex++;
+
+				if (currentResolutionIndex >= supportedResolutions.size()) {
+					Log.e(TAG, "Position is out of bounds setting to 0");
+					currentResolutionIndex = 0; // back to default
+				}
+
+				camResSpinner.setSelection(currentResolutionIndex);
+
+				mUVCCamera.stopPreview();
+				if (mPreviewSurface != null) {
+					mPreviewSurface.release();
+					mPreviewSurface = null;
+				}
+
+				try {
+					Thread.sleep(100);
+				} catch (Exception e) {
+				}
+
+
+				try {
+					mUVCCamera.setPreviewSize(supportedResolutions.get(currentResolutionIndex).getWidth(), supportedResolutions.get(currentResolutionIndex).getHeight(), UVCCamera.FRAME_FORMAT_MJPEG);
+					Toast.makeText(myActivity, "" + supportedResolutions.get(currentResolutionIndex).getWidth() + " x " + supportedResolutions.get(currentResolutionIndex).getHeight(), Toast.LENGTH_SHORT).show();
+
+				} catch (final IllegalArgumentException e) {
+					// fallback to YUV mode
+					try {
+						Toast.makeText(myActivity, "Failed Requested Stream", Toast.LENGTH_SHORT).show();
+						mUVCCamera.setPreviewSize(UVCCamera.DEFAULT_PREVIEW_WIDTH, UVCCamera.DEFAULT_PREVIEW_HEIGHT, UVCCamera.DEFAULT_PREVIEW_MODE);
+					} catch (final IllegalArgumentException e1) {
+						mUVCCamera.destroy();
+						Log.e("ERROR", "Could Not set resolution");
+						Toast.makeText(myActivity, "FATAL ERROR", Toast.LENGTH_SHORT).show();
+						return;
+					}
+				}
+
+				runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						// set aspect ration
+						mUVCCameraView.setAspectRatio(supportedResolutions.get(currentResolutionIndex).getWidth() / (float) supportedResolutions.get(currentResolutionIndex).getHeight());
+					}
+				});
+
+				final SurfaceTexture st = mUVCCameraView.getSurfaceTexture();
+				if (st != null) {
+					mPreviewSurface = new Surface(st);
+					mUVCCamera.setPreviewDisplay(mPreviewSurface);
+					bFirstFPSSinceStart = true;
+					mUVCCamera.startPreview();
+					Log.d("getZoom", "" + zoom);
+					timerHandler.postDelayed(this, 5000);
+				}
+			}else{
+				Log.e("CAM-TEST", "UVC Camera View is NULL");
+			}
+		}
+	};
+
 	private AdapterView.OnItemSelectedListener mOnResolutionSelectListener = new AdapterView.OnItemSelectedListener() {
 		@Override
 		public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -200,6 +281,11 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 
 		mCameraButton = findViewById(R.id.camera_button);
 		mCameraButton.setOnClickListener(mOnClickListener);
+
+		mCameraTestButton = findViewById(R.id.btnTest);
+		mCameraTestButton.setEnabled(false);
+		mCameraTestButton.setOnClickListener(mOnTestClickListener);
+
 		loadShutterSound(this);
 		camResSpinner = findViewById(R.id.spinner_resolutions);
 		camResSpinner.setOnItemSelectedListener(mOnResolutionSelectListener);
@@ -420,6 +506,18 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 		super.onBackPressed();
 	}
 
+	private final OnClickListener mOnTestClickListener = new OnClickListener() {
+		@Override
+		public void onClick(final View view) {
+			synchronized (mSync) {
+				if(((ToggleButton)view).isChecked()) {
+					startCameraTest();
+				}else{
+					stopCameraTest();
+				}
+			}
+		}
+	};
 
 	private final OnClickListener mOnClickListener = new OnClickListener() {
 		@Override
@@ -603,6 +701,7 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 							// Set Spinner adapter
 							camResSpinner.setAdapter(mResAdapter);
 							mCameraButton.setChecked(true);
+							mCameraTestButton.setEnabled(true);
 						}
 					});
 				}
@@ -625,6 +724,20 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 		}
 	};
 
+	private synchronized void startCameraTest(){
+		Log.d("CAM-TEST", "Start Camera Test");
+		startTime = System.currentTimeMillis();
+		timerHandler.postDelayed(timerRunnable, 1000);
+		mCameraButton.setChecked(true);
+	}
+
+	private synchronized void stopCameraTest(){
+		Log.d("CAM-TEST", "Stop Camera Test");
+		timerHandler.removeCallbacks(timerRunnable);
+		mCameraButton.setChecked(false);
+
+	}
+
 	private synchronized void releaseCamera() {
 		synchronized (mSync) {
 			if (mUVCCamera != null) {
@@ -646,6 +759,8 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
+					stopCameraTest();
+					mCameraTestButton.setEnabled(false);
 					mCameraButton.setChecked(false);
 					camResSpinner.setAdapter(null);
 				}
